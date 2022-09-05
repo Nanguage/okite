@@ -1,5 +1,6 @@
 import pytest
 import multiprocessing
+import asyncio
 
 from okite.rpc.rpc import Server, Client
 
@@ -10,7 +11,6 @@ ADDRESS = "127.0.0.1:8686"
 def _run_server():
     s = Server(ADDRESS)
     s.register_func(eval)
-    s.register_func(exec)
     s.run_server()
 
 
@@ -24,7 +24,9 @@ def start_server():
 
 def test_call():
     c = Client(ADDRESS)
-    s_ = 'Hello World!'
-    r_ = c.call("eval", repr(s_))
-    assert r_ == s_
+    async def coro():
+        s_ = 'Hello World!'
+        r_ = await c.call("eval", repr(s_))
+        assert r_ == s_
+    asyncio.run(coro())
 

@@ -29,12 +29,13 @@ class Server(_Server):
 
 
 class Client(_Client):
-    def assign_from_local(self, var_name: str, val: T.Any):
-        self.call("assign_global", var_name, val)
+    async def assign_from_local(self, var_name: str, val: T.Any):
+        await self.call("assign_global", var_name, val)
 
-    def register_from_local(
+    async def register_from_local(
             self, func: T.Callable, key: T.Optional[str] = None):
-        self.call("register_func", func, key)
+        await self.call("register_func", func, key)
 
-    def eval(self, expr: str):
-        return self.call("eval", expr)
+    async def eval(self, expr: str):
+        output = await self.call("eval", expr)
+        return output

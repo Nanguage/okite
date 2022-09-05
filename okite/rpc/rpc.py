@@ -1,32 +1,28 @@
 import typing as T
-import socketserver
 import traceback
-from socket import socket
+import asyncio
 
 from .stream import Streamer
 from .utils import parse_address
 
 
-def get_handler_class(calls, streamer: Streamer):
+def get_handler(calls, streamer: Streamer):
 
-    class Handler(socketserver.StreamRequestHandler):
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        func = await streamer.load(reader)
+        args = await streamer.load(reader)
+        kwargs = await streamer.load(reader)
+        try:
+            output = calls[func](*args, **kwargs)
+        except Exception:
+            streamer.dump(True, writer)
+            streamer.dump(traceback.format_exc(), writer)
+        else:
+            streamer.dump(False, writer)
+            streamer.dump(output, writer)
+        await writer.drain()
 
-        def handle(self):
-            func = streamer.load(self.rfile)
-            args = streamer.load(self.rfile)
-            kwargs = streamer.load(self.rfile)
-            try:
-                output = calls[func](*args, **kwargs)
-            except Exception:
-                # signal error, write stacktrace
-                streamer.dump(True, self.wfile)
-                streamer.dump(traceback.format_exc(), self.wfile)
-            else:
-                # write output
-                streamer.dump(False, self.wfile)
-                streamer.dump(output, self.wfile)
-
-    return Handler
+    return handler
 
 
 class Server():
@@ -49,10 +45,15 @@ class Server():
         self.funcs[key] = func
 
     def run_server(self):
-        handler_cls = get_handler_class(self.funcs, self.streamer)
-        ss = socketserver.TCPServer(self.address, handler_cls)
-        print(f"Start server at {self.address}")
-        ss.serve_forever()
+        handler = get_handler(self.funcs, self.streamer)
+
+        async def server_coro():
+            print(f"Start server at {self.address}")
+            server = await asyncio.start_server(handler, *self.address)
+            async with server:
+                await server.serve_forever()
+
+        asyncio.run(server_coro())
 
 
 class Client():
@@ -65,17 +66,16 @@ class Client():
             self.streamer = Streamer()
         self.server_addr = parse_address(address)
 
-    def call(self, func_name: str, *args, **kwargs):
-        sock = socket()
-        sock.connect(self.server_addr)
-        file = sock.makefile(mode='rwb', buffering=-1)
-        # write function name and arguments
-        self.streamer.dump(func_name, file)
-        self.streamer.dump(args, file)
-        self.streamer.dump(kwargs, file)
-        file.flush()
-        # check for error
-        if self.streamer.load(file):
-            raise RuntimeError(self.streamer.load(file))
-        # read output
-        return self.streamer.load(file)
+    async def call(self, func_name: str, *args, **kwargs):
+        reader, writer = await asyncio.open_connection(
+            self.server_addr[0], self.server_addr[1])
+        self.streamer.dump(func_name, writer)
+        self.streamer.dump(args, writer)
+        self.streamer.dump(kwargs, writer)
+        await writer.drain()
+        flag = await self.streamer.load(reader)
+        if flag:
+            error_msg = await self.streamer.load(reader)
+            raise RuntimeError(error_msg)
+        output = await self.streamer.load(reader)
+        return output
