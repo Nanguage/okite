@@ -1,19 +1,13 @@
 import typing as T
-import asyncio
 
 from .rpc.rpc import Server as _Server
 from .rpc.rpc import Client as _Client
+from .utils import get_event_loop
 
 if T.TYPE_CHECKING:
     from .rpc.stream import Streamer
 
 
-def get_loop() -> asyncio.AbstractEventLoop:
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-    return loop
 
 
 class Server(_Server):
@@ -59,14 +53,14 @@ class Proxy():
         return f"<{self.__class__.__name__} name={self.name} client={self.client}>"
 
     def __call__(self, *args, **kwargs):
-        loop = get_loop()
-        coro = self.client.call(self.name, *args, **kwargs)
-        output = loop.run_until_complete(coro)
+        with get_event_loop() as loop:
+            coro = self.client.call(self.name, *args, **kwargs)
+            output = loop.run_until_complete(coro)
         return output
 
     def __del__(self):
-        loop = get_loop()
-        loop.run_until_complete(self.client.unregister_func(self.name))
+        with get_event_loop() as loop:
+            loop.run_until_complete(self.client.unregister_func(self.name))
 
 
 class Client(_Client):
@@ -96,6 +90,6 @@ class Client(_Client):
 
     def remote_func(self, func: T.Callable) -> "Proxy":
         p = Proxy(self, func.__name__)
-        loop = get_loop()
-        loop.run_until_complete(self.register_from_local(func))
+        with get_event_loop() as loop:
+            loop.run_until_complete(self.register_from_local(func))
         return p
