@@ -1,3 +1,4 @@
+import types
 import typing as T
 
 from .rpc.rpc import Server as _Server
@@ -6,8 +7,6 @@ from .utils import get_event_loop
 
 if T.TYPE_CHECKING:
     from .rpc.stream import Streamer
-
-
 
 
 class Server(_Server):
@@ -32,6 +31,14 @@ class Server(_Server):
         def _unregister_func(key: str) -> bool:
             return self.unregister_func(key)
 
+        def _call_method(
+                obj_name: str, method_name: str,
+                *args, **kwargs) -> T.Any:
+            obj = self.env[obj_name]
+            mth = getattr(obj, method_name)
+            output = mth(*args, **kwargs)
+            return output
+
         funcs: T.Dict[str, T.Callable] = {
             "exec": lambda e: exec(e, self.env),
             "eval": lambda e: eval(e, self.env),
@@ -40,6 +47,7 @@ class Server(_Server):
             "del_global": _del_global,
             "register_func": _register_func,
             "unregister_func": _unregister_func,
+            "call_method": _call_method,
         }
         super().__init__(address, streamer, funcs)
 
@@ -50,17 +58,56 @@ class Proxy():
         self.name = name
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} name={self.name} client={self.client}>"
+        r = f"<{self.__class__.__name__} " \
+            "name={self.name} client={self.client}>"
+        return r
 
+
+class FuncProxy(Proxy):
     def __call__(self, *args, **kwargs):
         with get_event_loop() as loop:
             coro = self.client.call(self.name, *args, **kwargs)
             output = loop.run_until_complete(coro)
         return output
 
-    def __del__(self):
+    def clear(self):
         with get_event_loop() as loop:
-            loop.run_until_complete(self.client.unregister_func(self.name))
+            coro = self.client.unregister_func(self.name)
+            loop.run_until_complete(coro)
+
+
+class MethodProxy(Proxy):
+    def __init__(
+            self, client: "Client",
+            obj_name: str, mth_name: str) -> None:
+        self.obj_name = obj_name
+        self.mth_name = mth_name
+        super().__init__(client, obj_name)
+
+    def __call__(self, *args, **kwargs):
+        with get_event_loop() as loop:
+            coro = self.client.call(
+                "call_method", self.obj_name, self.mth_name,
+                *args, **kwargs)
+            output = loop.run_until_complete(coro)
+        return output
+
+
+class ObjProxy(Proxy):
+    def clear(self):
+        with get_event_loop() as loop:
+            coro = self.client.del_var(self.name)
+            loop.run_until_complete(coro)
+
+    def __getattr__(self, name: str) -> T.Any:
+        async def coro():
+            attr = await self.client.eval(f"{self.name}.{name}")
+            if isinstance(attr, types.MethodType):
+                return MethodProxy(self.client, self.name, name)
+            else:
+                return attr
+        with get_event_loop() as loop:
+            return loop.run_until_complete(coro())
 
 
 class Client(_Client):
@@ -89,7 +136,13 @@ class Client(_Client):
         await self.call("exec", source)
 
     def remote_func(self, func: T.Callable) -> "Proxy":
-        p = Proxy(self, func.__name__)
+        p = FuncProxy(self, func.__name__)
         with get_event_loop() as loop:
             loop.run_until_complete(self.register_from_local(func))
+        return p
+
+    def remote_object(self, var_name: str, obj: T.Any) -> "Proxy":
+        p = ObjProxy(self, var_name)
+        with get_event_loop() as loop:
+            loop.run_until_complete(self.assign_from_local(var_name, obj))
         return p

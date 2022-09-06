@@ -102,3 +102,19 @@ def test_remote_func():
         return a + b
 
     assert add(1, 2) == 3
+
+
+def test_remote_obj():
+    c = Client(ADDRESS)
+
+    class A():
+        def __init__(self):
+            self.a = 10
+        
+        def mth1(self, x):
+            return self.a + x
+
+    a = A()
+    p = c.remote_object("a", a)
+    assert p.a == 10
+    assert p.mth1(10) == 20

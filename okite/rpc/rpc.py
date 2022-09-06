@@ -8,7 +8,8 @@ from .utils import parse_address
 
 def get_handler(calls, streamer: Streamer):
 
-    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    async def handler(
+            reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         func = await streamer.load(reader)
         args = await streamer.load(reader)
         kwargs = await streamer.load(reader)
