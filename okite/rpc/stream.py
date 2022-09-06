@@ -1,7 +1,8 @@
 import typing as T
-import cloudpickle
 import struct
 import asyncio
+
+import cloudpickle
 
 
 class PicklerBase():

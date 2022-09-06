@@ -11,7 +11,7 @@ ADDRESS = "127.0.0.1:8686"
 def _run_server():
     s = Server(ADDRESS)
     s.register_func(eval)
-    s.run_server()
+    s.run()
 
 
 @pytest.fixture(autouse=True, scope="module")

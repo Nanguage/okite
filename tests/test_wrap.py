@@ -10,7 +10,7 @@ ADDRESS = "127.0.0.1:8687"
 
 def _run_server():
     s = Server(ADDRESS)
-    s.run_server()
+    s.run()
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -47,6 +47,18 @@ def test_assign_from_local():
     asyncio.run(coro())
 
 
+def test_del_var():
+    c = Client(ADDRESS)
+
+    async def coro():
+        await c.assign_from_local("b", 100)
+        await c.del_var("b")
+        with pytest.raises(RuntimeError):
+            await c.eval("b")
+
+    asyncio.run(coro())
+
+
 def test_register_from_local():
     c = Client(ADDRESS)
 
@@ -62,3 +74,31 @@ def test_register_from_local():
         assert r == 4
 
     asyncio.run(coro())
+
+
+def test_unregister_func():
+    c = Client(ADDRESS)
+
+    async def coro():
+        await c.register_from_local(lambda x: x + 1, "myadd")
+        assert await c.unregister_func("myadd")
+        with pytest.raises(RuntimeError):
+            await c.call("myadd", 1)
+
+    asyncio.run(coro())
+
+
+def test_remote_func():
+    c = Client(ADDRESS)
+    
+    @c.remote_func
+    def add10(x):
+        return x + 10
+
+    assert add10(10) == 20
+
+    @c.remote_func
+    def add(a, b):
+        return a + b
+
+    assert add(1, 2) == 3

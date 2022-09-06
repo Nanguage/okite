@@ -44,7 +44,14 @@ class Server():
             key = func.__name__
         self.funcs[key] = func
 
-    def run_server(self):
+    def unregister_func(self, key: str) -> bool:
+        if key in self.funcs:
+            self.funcs.pop(key)
+            return True
+        else:
+            return False
+
+    def run(self):
         handler = get_handler(self.funcs, self.streamer)
 
         async def server_coro():

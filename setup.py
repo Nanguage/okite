@@ -37,11 +37,11 @@ def get_long_description():
 
 
 def get_install_requires():
-    requirements = []
+    requirements = ["cloudpickle", "fire"]
     return requirements
 
 
-requires_test = ['pytest', 'pytest-cov', 'flake8', 'pytest-order']
+requires_test = ['pytest', 'pytest-cov', 'flake8', 'pytest-order', 'mypy']
 
 
 setup(
