@@ -45,12 +45,8 @@ class Server():
             key = func.__name__
         self.funcs[key] = func
 
-    def unregister_func(self, key: str) -> bool:
-        if key in self.funcs:
-            self.funcs.pop(key)
-            return True
-        else:
-            return False
+    def unregister_func(self, key: str):
+        self.funcs.pop(key)
 
     def run(self):
         handler = get_handler(self.funcs, self.streamer)

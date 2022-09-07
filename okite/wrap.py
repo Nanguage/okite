@@ -1,4 +1,5 @@
 import types
+import uuid
 import typing as T
 
 from .rpc.rpc import Server as _Server
@@ -18,18 +19,14 @@ class Server(_Server):
         def _assign_global(var: str, val: T.Any):
             self.env[var] = val
 
-        def _del_global(var: str) -> bool:
-            if var in self.env:
-                self.env.pop(var)
-                return True
-            else:
-                return False
+        def _del_global(var: str):
+            self.env.pop(var)
 
         def _register_func(func: T.Callable, key: T.Optional[str] = None):
             self.register_func(func, key)
 
-        def _unregister_func(key: str) -> bool:
-            return self.unregister_func(key)
+        def _unregister_func(key: str):
+            self.unregister_func(key)
 
         def _call_method(
                 obj_name: str, method_name: str,
@@ -38,6 +35,10 @@ class Server(_Server):
             mth = getattr(obj, method_name)
             output = mth(*args, **kwargs)
             return output
+
+        def _set_attr(obj_name: str, attr_name: str, value: T.Any):
+            obj = self.env[obj_name]
+            setattr(obj, attr_name, value)
 
         funcs: T.Dict[str, T.Callable] = {
             "exec": lambda e: exec(e, self.env),
@@ -48,6 +49,7 @@ class Server(_Server):
             "register_func": _register_func,
             "unregister_func": _unregister_func,
             "call_method": _call_method,
+            "set_attr": _set_attr,
         }
         super().__init__(address, streamer, funcs)
 
@@ -59,7 +61,7 @@ class Proxy():
 
     def __repr__(self) -> str:
         r = f"<{self.__class__.__name__} " \
-            "name={self.name} client={self.client}>"
+            f"name={self.name} client={self.client}>"
         return r
 
 
@@ -109,6 +111,14 @@ class ObjProxy(Proxy):
         with get_event_loop() as loop:
             return loop.run_until_complete(coro())
 
+    def __setattr__(self, name: str, value: T.Any):
+        if name in ('client', 'name'):
+            super().__setattr__(name, value)
+        else:
+            with get_event_loop() as loop:
+                coro = self.client.call("set_attr", self.name, name, value)
+                loop.run_until_complete(coro)
+
 
 class Client(_Client):
     def __repr__(self) -> str:
@@ -118,15 +128,15 @@ class Client(_Client):
     async def assign_from_local(self, var_name: str, val: T.Any):
         await self.call("assign_global", var_name, val)
 
-    async def del_var(self, var_name: str) -> bool:
-        return await self.call("del_global", var_name)
+    async def del_var(self, var_name: str):
+        await self.call("del_global", var_name)
 
     async def register_from_local(
             self, func: T.Callable, key: T.Optional[str] = None):
         await self.call("register_func", func, key)
 
-    async def unregister_func(self, key: str) -> bool:
-        return await self.call("unregister_func", key)
+    async def unregister_func(self, key: str):
+        await self.call("unregister_func", key)
 
     async def eval(self, expr: str) -> T.Any:
         output = await self.call("eval", expr)
@@ -141,7 +151,12 @@ class Client(_Client):
             loop.run_until_complete(self.register_from_local(func))
         return p
 
-    def remote_object(self, var_name: str, obj: T.Any) -> "Proxy":
+    def remote_object(
+            self, obj: T.Any,
+            var_name: T.Optional[str] = None) -> "Proxy":
+        if var_name is None:  # generate a random name
+            rand_id = str(uuid.uuid4())[-8:]
+            var_name = "var_" + rand_id
         p = ObjProxy(self, var_name)
         with get_event_loop() as loop:
             loop.run_until_complete(self.assign_from_local(var_name, obj))

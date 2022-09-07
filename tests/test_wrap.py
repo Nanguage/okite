@@ -81,7 +81,7 @@ def test_unregister_func():
 
     async def coro():
         await c.register_from_local(lambda x: x + 1, "myadd")
-        assert await c.unregister_func("myadd")
+        await c.unregister_func("myadd")
         with pytest.raises(RuntimeError):
             await c.call("myadd", 1)
 
@@ -115,6 +115,12 @@ def test_remote_obj():
             return self.a + x
 
     a = A()
-    p = c.remote_object("a", a)
+    p = c.remote_object(a)
     assert p.a == 10
     assert p.mth1(10) == 20
+    b = A()
+    p = c.remote_object(b, "b")
+    r = asyncio.run(c.eval("b.mth1(10)"))
+    assert r == 20
+    p.c = "111"
+    assert asyncio.run(c.eval("b.c")) == "111"
