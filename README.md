@@ -10,7 +10,7 @@ $ pip install okite
 
 ## Usage
 
-### start a server
+### Server side
 
 Using Python API:
 
@@ -28,7 +28,7 @@ Or using the CLI:
 $ python -m okite server ip=127.0.0.1 port=8686
 ```
 
-### client side example
+### Client side
 
 Remote function:
 
@@ -61,8 +61,10 @@ class Car:
         self.pos[1] += dx
 
 car = Car()
-car_proxy = c.remote_obj(car)  # will send 'car' to remote machine
-car_proxy.move(10, 20)  # This will change the state of car on remote side
+car_proxy = c.remote_obj(car)  # will send 'car' to remote machine(server)
+car_proxy.move(10, 20)  # This will change the state of car on server side
 car_proxy.move(0, 10)
 print(car_proxy.pos)  # [10, 30]
+car_proxy.pos = [100, 100]  # This will set car.pos on server side
+print(car_proxy.pos)  # [100, 100]
 ```
