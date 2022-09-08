@@ -18,31 +18,39 @@ class Operations():
         return await self.client.call(func_name, *args, **kwargs)
 
     async def assign_from_local(self, var_name: str, val: T.Any):
-        await self.call("assign_global", var_name, val)
+        await self.client.call("assign_global", var_name, val)
 
     async def del_var(self, var_name: str):
-        await self.call("del_global", var_name)
+        await self.client.call("del_global", var_name)
 
     async def register_from_local(
             self, func: T.Callable, key: T.Optional[str] = None):
-        await self.call("register_func", func, key)
+        await self.client.call("register_func", func, key)
 
     async def unregister_func(self, key: str):
-        await self.call("unregister_func", key)
+        await self.client.call("unregister_func", key)
+
+    async def set_attr(self, obj_name: str, attr_name: str, value: T.Any):
+        await self.client.call("set_attr", obj_name, attr_name, value)
+
+    async def get_attr(
+            self, obj_name: str, attr_name: str,
+            default: T.Any = None) -> T.Any:
+        return await self.client.call("get_attr", obj_name, attr_name, default)
 
     async def eval(self, expr: str) -> T.Any:
-        output = await self.call("eval", expr)
+        output = await self.client.call("eval", expr)
         return output
 
     async def exec(self, source: str):
-        await self.call("exec", source)
+        await self.client.call("exec", source)
 
 
 def async_to_sync(async_func):
     @wraps(async_func)
     def sync_func(*args, **kwargs):
+        coro = async_func(*args, **kwargs)
         with get_event_loop() as loop:
-            coro = async_func(*args, **kwargs)
             res = loop.run_until_complete(coro)
         return res
     return sync_func
@@ -58,6 +66,7 @@ class Client(_Client):
     def __init__(self, address: str, streamer: T.Optional["Streamer"] = None):
         super().__init__(address, streamer)
         self.op = Operations(self)
+        self.sync_op = SyncOperations(self)
 
     def __repr__(self) -> str:
         addr = self.server_addr

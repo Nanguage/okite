@@ -17,6 +17,8 @@ def test_call():
     async def coro():
         r = await c.call("eval", "1")
         assert r == 1
+        r = await c.op.call("eval", "1")
+        assert r == 1
     
     asyncio.run(coro())
 
@@ -77,3 +79,22 @@ def test_unregister_func():
 
     asyncio.run(coro())
 
+
+def test_set_get_attr():
+    c = Client(ADDRESS)
+
+    class A():
+        def __init__(self) -> None:
+            self.a = 1
+
+    a = A()
+
+    async def coro():
+        await c.op.assign_from_local("a", a)
+        a_a = await c.op.get_attr("a", "a")
+        assert a_a == 1
+        await c.op.set_attr("a", "b", 2)
+        a_b = await c.op.get_attr("a", "b")
+        assert a_b == 2
+
+    asyncio.run(coro())
