@@ -45,6 +45,13 @@ class Operations():
     async def exec(self, source: str):
         await self.client.call("exec", source)
 
+    async def import_module(
+            self, mod_name: str, alias: T.Optional[str] = None):
+        if alias is None:
+            await self.client.call("exec", f"import {mod_name}")
+        else:
+            await self.client.call("exec", f"import {mod_name} as {alias}")
+
 
 def async_to_sync(async_func):
     @wraps(async_func)
