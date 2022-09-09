@@ -8,9 +8,7 @@ Okite is a simple, user-friendly RPC package.
 $ pip install okite
 ```
 
-## Usage
-
-### Server side
+## Server side
 
 Using Python API:
 
@@ -28,7 +26,9 @@ Or using the CLI:
 $ python -m okite server ip=127.0.0.1 port=8686
 ```
 
-### Client side
+## Client side
+
+### Proxy API
 
 Remote function:
 
@@ -67,4 +67,76 @@ car_proxy.move(0, 10)
 print(car_proxy.pos)  # [10, 30]
 car_proxy.pos = [100, 100]  # This will set car.pos on server side
 print(car_proxy.pos)  # [100, 100]
+```
+
+### Operations API
+
+| Operation | Asynchronous API | Synchronous API | Description |
+| --------- | --------- | -------- | ----------- |
+| call | `client.op.call` | `client.sync_op.call` | Call registered function in server |
+| register_from_local | `client.op.register_from_local` | `client.sync_op.register_from_local` | Send a function to server side, and register it as a RPC function. |
+| unregister_func | `client.op.unregister_func` | `client.sync_op.unregister_func` | Unregister a RPC function in server side. |
+| assign_from_local | `client.op.assign_from_local` | `client.sync_op.assign_from_local` | Send a object to server, and assign to a global variable |
+| del_var | `client.op.del_var` | `client.sync_op.del_var` | Delete a global veriable in server side environment. |
+| eval | `client.op.eval` | `client.sync_op.eval` | Run `eval` function on server |
+| exec | `client.op.exec` | `client.sync_op.exec` | Run `exec` function on server |
+| set_attr | `client.op.set_attr` | `client.sync_op.set_attr` | Set object's attribute in server side's environment. |
+| get_attr | `client.op.get_attr` | `client.sync_op.get_attr` | Get object's attribute from server side's environment. |
+| import_module | `client.op.import_module` | `client.sync_op.import_module` | Import a module in server side's environment. |
+
+Example:
+
+```Python
+from okite import Client
+
+client = Client("127.0.0.1:8686")
+
+def add(a, b):
+    return a + b
+
+client.sync_op.register_from_local(add)
+print(client.sync_op.call(add, 1, 2))  # 3
+```
+
+## Custom Pickler
+
+You can control the behavior of object serilization/deserilization by
+create a custom `Pickler` class. For example, use `json` as the pickler:
+
+```Python
+# my_pickler.py
+from okite.rpc.stream import PicklerBase
+
+class MyPickler(PicklerBase):
+    def serialize(self, obj) -> bytes:
+        return json.dumps(obj).encode()
+
+    def deserialize(self, obj_bytes: bytes) -> object:
+        return json.loads(obj_bytes.decode())
+```
+
+Use `MyPickler` in server:
+
+```Python
+# my_server.py
+from my_pickler import MyPickler
+from okite import Server
+from okite.rpc.stream import Streamer
+
+streamer = Streamer(MyPickler())
+server = Server("127.0.0.1:8686", streamer=streamer)
+server.run()
+```
+
+Use `MyPickler` in client:
+
+``` Python
+# my_client.py
+from my_pickler import MyPickler
+from okite import Server
+from okite.rpc.stream import Streamer
+
+streamer = Streamer(MyPickler())
+client = Client("127.0.0.1:8686", streamer=streamer)
+print(client.eval("1 + 1"))  # 2
 ```

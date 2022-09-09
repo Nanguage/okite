@@ -22,6 +22,7 @@ def get_handler(calls, streamer: Streamer):
             streamer.dump(False, writer)
             streamer.dump(output, writer)
         await writer.drain()
+        writer.close()
 
     return handler
 

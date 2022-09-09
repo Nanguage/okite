@@ -36,7 +36,13 @@ class Streamer:
     async def load(self, file: asyncio.StreamReader):
         size_byte = await file.read(8)
         size, = struct.unpack(self.OBJLEN_PACK_FORMAT, size_byte)
-        obj_bytes = await file.read(size)
+        received_size = 0
+        byte_chunks = []
+        while received_size < size:
+            chunk = await file.read(size - received_size)
+            received_size += len(chunk)
+            byte_chunks.append(chunk)
+        obj_bytes = b"".join(byte_chunks)
         obj = self.pickler.deserialize(obj_bytes)
         return obj
 
