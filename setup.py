@@ -10,7 +10,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
 ]
 
@@ -49,7 +49,7 @@ setup(
     author='Weize Xu',
     author_email='vet.xwz@gmail.com',
     version=get_version(),
-    license='GPLv3',
+    license='MIT',
     description='A Pythonic RPC package.',
     long_description=get_long_description(),
     keywords=keywords,
