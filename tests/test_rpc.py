@@ -5,6 +5,7 @@ import json
 
 from okite.rpc.rpc import Server, Client
 from okite.rpc.stream import Streamer, PicklerBase
+from okite.utils import patch_multiprocessing_pickler
 
 
 ADDRESS = "127.0.0.1:8686"
@@ -34,11 +35,7 @@ def test_call():
 
 
 def test_custom_pickler():
-    import pickle
-    import cloudpickle
-    from multiprocessing import reduction
-    pickle.Pickler = cloudpickle.Pickler
-    reduction.ForkingPickler = cloudpickle.Pickler
+    patch_multiprocessing_pickler()
 
     class MyPickler(PicklerBase):
         def serialize(self, obj) -> bytes:
