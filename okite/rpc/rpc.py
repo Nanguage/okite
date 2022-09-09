@@ -83,4 +83,5 @@ class Client():
             error_msg = await self.streamer.load(reader)
             raise RuntimeError(error_msg)
         output = await self.streamer.load(reader)
+        writer.close()
         return output

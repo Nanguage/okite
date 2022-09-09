@@ -23,7 +23,7 @@ server.run()
 Or using the CLI:
 
 ```Bash
-$ python -m okite server ip=127.0.0.1 port=8686
+$ python -m okite server --ip=127.0.0.1 --port=8686
 ```
 
 ## Client side
@@ -61,7 +61,7 @@ class Car:
         self.pos[1] += dx
 
 car = Car()
-car_proxy = c.remote_obj(car)  # will send 'car' to remote machine(server)
+car_proxy = c.remote_object(car)  # will send 'car' to remote machine(server)
 car_proxy.move(10, 20)  # This will change the state of car on server side
 car_proxy.move(0, 10)
 print(car_proxy.pos)  # [10, 30]
@@ -105,6 +105,7 @@ create a custom `Pickler` class. For example, use `json` as the pickler:
 
 ```Python
 # my_pickler.py
+import json
 from okite.rpc.stream import PicklerBase
 
 class MyPickler(PicklerBase):
@@ -133,10 +134,10 @@ Use `MyPickler` in client:
 ``` Python
 # my_client.py
 from my_pickler import MyPickler
-from okite import Server
+from okite import Client
 from okite.rpc.stream import Streamer
 
 streamer = Streamer(MyPickler())
 client = Client("127.0.0.1:8686", streamer=streamer)
-print(client.eval("1 + 1"))  # 2
+print(client.sync_op.eval("1 + 1"))  # 2
 ```
