@@ -141,3 +141,25 @@ streamer = Streamer(MyPickler())
 client = Client("127.0.0.1:8686", streamer=streamer)
 print(client.sync_op.eval("1 + 1"))  # 2
 ```
+
+## Worker
+
+Using `Worker` you can create a server in a more convenient way:
+
+```Python
+from okite.worker import Worker
+from okite import Client
+
+with Worker() as w:
+    c = Client(w.server_addr)
+    res = c.sync_op.eval("1 + 1")
+    print(res)  # will print '2'
+
+# or:
+w = Worker()
+w.start()
+c = Client(w.server_addr)
+res = c.sync_op.eval("1 + 1")
+print(res)  # 2
+w.terminated()
+```
