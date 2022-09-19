@@ -54,6 +54,6 @@ def wait_until_bind(
         try:
             sock.connect(server_addr)
             break
-        except ConnectionRefusedError as e:
+        except ConnectionRefusedError:
             time.sleep(time_delta)
     sock.close()
