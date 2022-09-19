@@ -1,6 +1,22 @@
-![title](title.png)
+<div align="center">
 
-Okite is a simple, user-friendly RPC package.
+<img src="./title.png">
+
+<p>Okite is a simple, user-friendly RPC package.</p>
+
+<p>
+    <a href="https://github.com/Nanguage/okite/actions/workflows/build_and_test.yml">
+        <img src="https://github.com/Nanguage/okite/actions/workflows/build_and_test.yml/badge.svg" alt="Build Status">
+    </a>
+    <a href="https://app.codecov.io/gh/Nanguage/okite">
+        <img src="https://codecov.io/gh/Nanguage/okite/branch/master/graph/badge.svg" alt="codecov">
+    </a>
+    <a href="https://pypi.org/project/okite/">
+      <img src="https://img.shields.io/pypi/v/okite.svg" alt="Install with PyPi" />
+    </a>
+</p>
+
+</div>
 
 ## Installation
 
