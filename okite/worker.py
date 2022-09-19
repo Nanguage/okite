@@ -3,7 +3,7 @@ from multiprocessing import Process
 
 from .wrap import Server
 from .rpc.stream import Streamer
-from .utils import find_free_port
+from .utils import find_free_port, wait_until_bind, parse_address
 from .utils import patch_multiprocessing_pickler
 
 
@@ -25,8 +25,12 @@ class Worker(Process):
         server = Server(self.server_addr, streamer=self.streamer)
         server.run()
 
+    def wait_until_server_bind(self):
+        wait_until_bind(parse_address(self.server_addr))
+
     def __enter__(self):
         self.start()
+        self.wait_until_server_bind()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

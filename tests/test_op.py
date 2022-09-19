@@ -7,7 +7,7 @@ from _utils import start_server
 
 
 ADDRESS = "127.0.0.1:8687"
-start_server = pytest.fixture(autouse=True, scope="module")(
+start_server = pytest.fixture(autouse=True, scope="session")(
     start_server(ADDRESS))
 c = Client(ADDRESS)
 

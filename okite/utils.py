@@ -1,3 +1,5 @@
+import typing as T
+import time
 import socket
 import asyncio
 import contextlib
@@ -34,3 +36,24 @@ def find_free_port():
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         port = s.getsockname()[1]
     return port
+
+
+def parse_address(address: str) -> T.Tuple[str, int]:
+    ip, port = address.split(":")
+    port_ = int(port)
+    return (ip, port_)
+
+
+def wait_until_bind(
+        server_addr: T.Union[str, T.Tuple[str, int]],
+        time_delta: float = 0.01):
+    if isinstance(server_addr, str):
+        server_addr = parse_address(server_addr)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    while True:
+        try:
+            sock.connect(server_addr)
+            break
+        except ConnectionRefusedError as e:
+            time.sleep(time_delta)
+    sock.close()

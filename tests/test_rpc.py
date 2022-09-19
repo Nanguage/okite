@@ -6,6 +6,7 @@ import json
 from okite.rpc.rpc import Server, Client
 from okite.rpc.stream import Streamer, PicklerBase
 from okite.utils import patch_multiprocessing_pickler
+from okite.utils import wait_until_bind
 
 
 ADDRESS = "127.0.0.1:8686"
@@ -18,10 +19,11 @@ def _run_server():
     s.run()
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(scope="session", autouse=True)
 def start_server():
     p = multiprocessing.Process(target=_run_server)
     p.start()
+    wait_until_bind(ADDRESS)
     yield
     p.terminate()
 
@@ -45,14 +47,16 @@ def test_custom_pickler():
             return json.loads(obj_bytes.decode())
 
     streamer = Streamer(MyPickler())
+    addr = "127.0.0.1:8685"
     def _run_server():
-        s = Server("127.0.0.1:8685", streamer=streamer)
+        s = Server(addr, streamer=streamer)
         s.register_func(eval)
         s.run()
 
     p = multiprocessing.Process(target=_run_server)
     p.start()
-
-    c = Client("127.0.0.1:8685", streamer=streamer)
+    wait_until_bind(addr)
+    c = Client(addr, streamer=streamer)
     assert asyncio.run(c.call("eval", "1")) == 1
     p.terminate()
+
