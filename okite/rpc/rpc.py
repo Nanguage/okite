@@ -10,18 +10,27 @@ def get_handler(calls, streamer: Streamer):
 
     async def handler(
             reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        func = await streamer.load(reader)
-        args = await streamer.load(reader)
-        kwargs = await streamer.load(reader)
         try:
-            output = calls[func](*args, **kwargs)
+            command = await streamer.load(reader)
         except Exception:
-            streamer.dump(True, writer)
-            streamer.dump(traceback.format_exc(), writer)
+            writer.close()
+            return
+
+        if command == "call":
+            func = await streamer.load(reader)
+            args = await streamer.load(reader)
+            kwargs = await streamer.load(reader)
+            try:
+                output = calls[func](*args, **kwargs)
+            except Exception:
+                streamer.dump(True, writer)
+                streamer.dump(traceback.format_exc(), writer)
+            else:
+                streamer.dump(False, writer)
+                streamer.dump(output, writer)
+            await writer.drain()
         else:
-            streamer.dump(False, writer)
-            streamer.dump(output, writer)
-        await writer.drain()
+            print(f"unsupported command: {command}, close the connection.")
         writer.close()
 
     return handler
@@ -74,6 +83,7 @@ class Client():
     async def call(self, func_name: str, *args, **kwargs):
         reader, writer = await asyncio.open_connection(
             self.server_addr[0], self.server_addr[1])
+        self.streamer.dump("call", writer)
         self.streamer.dump(func_name, writer)
         self.streamer.dump(args, writer)
         self.streamer.dump(kwargs, writer)

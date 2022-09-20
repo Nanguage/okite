@@ -44,6 +44,14 @@ def parse_address(address: str) -> T.Tuple[str, int]:
     return (ip, port_)
 
 
+def is_port_in_use(host: str, port: int) -> bool:
+    """Check if the port is in use.
+    https://stackoverflow.com/a/52872579/8500469
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex((host, port)) == 0
+
+
 def wait_until_bind(
         server_addr: T.Union[str, T.Tuple[str, int]],
         time_delta: float = 0.01):
@@ -51,9 +59,8 @@ def wait_until_bind(
         server_addr = parse_address(server_addr)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while True:
-        try:
-            sock.connect(server_addr)
+        if is_port_in_use(*server_addr):
             break
-        except ConnectionRefusedError:
+        else:
             time.sleep(time_delta)
     sock.close()
