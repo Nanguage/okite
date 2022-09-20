@@ -28,6 +28,11 @@ def start_server():
     p.terminate()
 
 
+def test_create_server():
+    s = Server(ADDRESS)
+    s.register_func(eval)
+
+
 def test_call():
     async def coro():
         s_ = 'Hello World!'

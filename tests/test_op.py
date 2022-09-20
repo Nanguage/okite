@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 
-from okite.wrap import Client
+from okite.wrap import Client, Server
 
 from _utils import start_server
 
@@ -10,6 +10,14 @@ ADDRESS = "127.0.0.1:8687"
 start_server = pytest.fixture(autouse=True, scope="session")(
     start_server(ADDRESS))
 c = Client(ADDRESS)
+
+
+def test_wrap_server():
+    s = Server(ADDRESS)
+
+    def add1(x):
+        return x + 1
+    s.register_func(add1)
 
 
 def test_call():
