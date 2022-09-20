@@ -64,4 +64,3 @@ def test_custom_pickler():
     c = Client(addr, streamer=streamer)
     assert asyncio.run(c.call("eval", "1")) == 1
     p.terminate()
-

@@ -1,8 +1,10 @@
 import typing as T
 import struct
-import asyncio
 
 import cloudpickle
+
+
+from .transport import Transport
 
 
 class PicklerBase():
@@ -33,7 +35,7 @@ class Streamer:
         else:
             self.pickler = pickler
 
-    async def load(self, file: asyncio.StreamReader):
+    async def load(self, file: Transport):
         size_byte = await file.read(8)
         size, = struct.unpack(self.OBJLEN_PACK_FORMAT, size_byte)
         received_size = 0
@@ -46,7 +48,7 @@ class Streamer:
         obj = self.pickler.deserialize(obj_bytes)
         return obj
 
-    def dump(self, obj: T.Any, file: asyncio.StreamWriter):
+    async def dump(self, obj: T.Any, file: Transport):
         obj_bytes = self.pickler.serialize(obj)
-        file.write(struct.pack(self.OBJLEN_PACK_FORMAT, len(obj_bytes)))
-        file.write(obj_bytes)
+        await file.write(struct.pack(self.OBJLEN_PACK_FORMAT, len(obj_bytes)))
+        await file.write(obj_bytes)

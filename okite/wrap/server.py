@@ -1,6 +1,8 @@
 import typing as T
 
 from ..rpc.rpc import Server as _Server
+from ..rpc.transport import Transport
+
 
 if T.TYPE_CHECKING:
     from ..rpc.stream import Streamer
@@ -9,7 +11,9 @@ if T.TYPE_CHECKING:
 class Server(_Server):
     def __init__(
             self, address: str = "127.0.0.1:8686",
-            streamer: T.Optional["Streamer"] = None) -> None:
+            streamer: T.Optional["Streamer"] = None,
+            transport_cls: type = Transport,
+            ) -> None:
         self.env = globals()
 
         def _assign_global(var: str, val: T.Any):
@@ -53,4 +57,4 @@ class Server(_Server):
             "get_attr": _get_attr,
             "set_attr": _set_attr,
         }
-        super().__init__(address, streamer, funcs)
+        super().__init__(address, streamer, transport_cls, funcs)

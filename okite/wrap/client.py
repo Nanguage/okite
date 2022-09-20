@@ -3,6 +3,7 @@ import typing as T
 from functools import wraps
 
 from ..rpc.rpc import Client as _Client
+from ..rpc.transport import Transport
 from .proxy import Proxy, FuncProxy, ObjProxy
 from ..utils import get_event_loop
 
@@ -70,8 +71,11 @@ class SyncOperations(Operations):
 
 
 class Client(_Client):
-    def __init__(self, address: str, streamer: T.Optional["Streamer"] = None):
-        super().__init__(address, streamer)
+    def __init__(
+            self, address: str,
+            streamer: T.Optional["Streamer"] = None,
+            transport_cls: type = Transport):
+        super().__init__(address, streamer, transport_cls)
         self.op = Operations(self)
         self.sync_op = SyncOperations(self)
 
