@@ -11,7 +11,7 @@ def test_worker():
     c = Client(addr)
     w.start()
     w.wait_until_server_bind()
-    assert c.sync_op.eval("1 + 1") == 2
+    assert c.op.eval("1 + 1") == 2
     w.terminate()
 
 
@@ -20,19 +20,19 @@ def test_auto_addr():
     c = Client(w.server_addr)
     w.start()
     w.wait_until_server_bind()
-    assert c.sync_op.eval("1 + 1") == 2
+    assert c.op.eval("1 + 1") == 2
     w.terminate()
 
 
 def test_with_block():
     with Worker() as w:
         c = Client(w.server_addr)
-        assert c.sync_op.eval("1 + 1") == 2
+        assert c.op.eval("1 + 1") == 2
     with Worker() as w1, Worker() as w2:
         c = Client(w1.server_addr)
-        assert c.sync_op.eval("1 + 1") == 2
+        assert c.op.eval("1 + 1") == 2
         c = Client(w2.server_addr)
-        assert c.sync_op.eval("1 + 1") == 2
+        assert c.op.eval("1 + 1") == 2
 
 
 def test_custom_pickler():
@@ -50,5 +50,5 @@ def test_custom_pickler():
     w.start()
     w.wait_until_server_bind()
     c = Client(addr, streamer=streamer)
-    assert c.sync_op.eval("1 + 1") == 2
+    assert c.op.eval("1 + 1") == 2
     w.terminate()

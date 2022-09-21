@@ -12,24 +12,24 @@ c = Client(ADDRESS)
 
 
 def test_call():
-    r = c.sync_op.call("eval", "1")
+    r = c.op.call("eval", "1")
     assert r == 1
 
 
 def test_eval():
-    r = c.sync_op.eval("1")
+    r = c.op.eval("1")
     assert r == 1
     
 
 def test_exec():
-    c.sync_op.exec("a = 10")
-    r = c.sync_op.eval("a")
+    c.op.exec("a = 10")
+    r = c.op.eval("a")
     assert r == 10
 
 
 def test_assign_from_local():
-    c.sync_op.assign_from_local("a", 100)
-    assert c.sync_op.eval("a") == 100
-    c.sync_op.assign_from_local("add1", lambda x: x + 1)
-    assert c.sync_op.eval("add1(1)") == 2
+    c.op.assign_from_local("a", 100)
+    assert c.op.eval("a") == 100
+    c.op.assign_from_local("add1", lambda x: x + 1)
+    assert c.op.eval("add1(1)") == 2
 

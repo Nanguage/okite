@@ -6,8 +6,7 @@ import json
 
 from okite.rpc.rpc import Server, Client, get_handler
 from okite.rpc.stream import Streamer, PicklerBase
-from okite.rpc.transport import Transport
-from okite.utils import parse_address, patch_multiprocessing_pickler
+from okite.utils import patch_multiprocessing_pickler
 from okite.utils import wait_until_bind
 
 

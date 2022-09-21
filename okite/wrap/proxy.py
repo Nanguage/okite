@@ -26,7 +26,7 @@ class FuncProxy(Proxy):
 
     def clear(self):
         with get_event_loop() as loop:
-            coro = self._client.op.unregister_func(self._name)
+            coro = self._client.async_op.unregister_func(self._name)
             loop.run_until_complete(coro)
 
 
@@ -50,12 +50,12 @@ class MethodProxy(Proxy):
 class ObjProxy(Proxy):
     def clear(self):
         with get_event_loop() as loop:
-            coro = self._client.op.del_var(self._name)
+            coro = self._client.async_op.del_var(self._name)
             loop.run_until_complete(coro)
 
     def __getattr__(self, name: str) -> T.Any:
         async def coro():
-            attr = await self._client.op.eval(f"{self._name}.{name}")
+            attr = await self._client.async_op.eval(f"{self._name}.{name}")
             if isinstance(attr, types.MethodType):
                 return MethodProxy(self._client, self._name, name)
             else:

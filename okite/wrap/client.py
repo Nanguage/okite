@@ -76,8 +76,8 @@ class Client(_Client):
             streamer: T.Optional["Streamer"] = None,
             transport_cls: type = Transport):
         super().__init__(address, streamer, transport_cls)
-        self.op = Operations(self)
-        self.sync_op = SyncOperations(self)
+        self.async_op = Operations(self)
+        self.op = SyncOperations(self)
 
     def __repr__(self) -> str:
         addr = self.server_addr
@@ -86,7 +86,7 @@ class Client(_Client):
     def remote_func(self, func: T.Callable) -> "Proxy":
         p = FuncProxy(self, func.__name__)
         with get_event_loop() as loop:
-            loop.run_until_complete(self.op.register_from_local(func))
+            loop.run_until_complete(self.async_op.register_from_local(func))
         return p
 
     def remote_object(
@@ -97,5 +97,6 @@ class Client(_Client):
             var_name = "var_" + rand_id
         p = ObjProxy(self, var_name)
         with get_event_loop() as loop:
-            loop.run_until_complete(self.op.assign_from_local(var_name, obj))
+            loop.run_until_complete(
+                self.async_op.assign_from_local(var_name, obj))
         return p

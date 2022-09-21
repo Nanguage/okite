@@ -24,7 +24,7 @@ def test_call():
     async def coro():
         r = await c.call("eval", "1")
         assert r == 1
-        r = await c.op.call("eval", "1")
+        r = await c.async_op.call("eval", "1")
         assert r == 1
     
     asyncio.run(coro())
@@ -32,13 +32,13 @@ def test_call():
 
 def test_assign_from_local():
     async def coro():
-        r = await c.op.eval("1")
+        r = await c.async_op.eval("1")
         assert r == 1
-        await c.op.assign_from_local("a", 100)
-        r = await c.op.eval("a")
+        await c.async_op.assign_from_local("a", 100)
+        r = await c.async_op.eval("a")
         assert r == 100
-        await c.op.assign_from_local("add1", lambda x: x + 1)
-        r = await c.op.eval("add1(1)")
+        await c.async_op.assign_from_local("add1", lambda x: x + 1)
+        r = await c.async_op.eval("add1(1)")
         assert r == 2
 
     asyncio.run(coro())
@@ -46,10 +46,10 @@ def test_assign_from_local():
 
 def test_del_var():
     async def coro():
-        await c.op.assign_from_local("b", 100)
-        await c.op.del_var("b")
+        await c.async_op.assign_from_local("b", 100)
+        await c.async_op.del_var("b")
         with pytest.raises(RuntimeError):
-            await c.op.eval("b")
+            await c.async_op.eval("b")
 
     asyncio.run(coro())
 
@@ -59,10 +59,10 @@ def test_register_from_local():
         return x + 2
 
     async def coro():
-        await c.op.register_from_local(add2)
+        await c.async_op.register_from_local(add2)
         r = await c.call("add2", 1)
         assert r == 3
-        await c.op.register_from_local(lambda x: x + 3, key="add3")
+        await c.async_op.register_from_local(lambda x: x + 3, key="add3")
         r = await c.call("add3", 1)
         assert r == 4
 
@@ -71,8 +71,8 @@ def test_register_from_local():
 
 def test_unregister_func():
     async def coro():
-        await c.op.register_from_local(lambda x: x + 1, "myadd")
-        await c.op.unregister_func("myadd")
+        await c.async_op.register_from_local(lambda x: x + 1, "myadd")
+        await c.async_op.unregister_func("myadd")
         with pytest.raises(RuntimeError):
             await c.call("myadd", 1)
 
@@ -87,11 +87,11 @@ def test_set_get_attr():
     a = A()
 
     async def coro():
-        await c.op.assign_from_local("a", a)
-        a_a = await c.op.get_attr("a", "a")
+        await c.async_op.assign_from_local("a", a)
+        a_a = await c.async_op.get_attr("a", "a")
         assert a_a == 1
-        await c.op.set_attr("a", "b", 2)
-        a_b = await c.op.get_attr("a", "b")
+        await c.async_op.set_attr("a", "b", 2)
+        a_b = await c.async_op.get_attr("a", "b")
         assert a_b == 2
 
     asyncio.run(coro())
@@ -99,9 +99,9 @@ def test_set_get_attr():
 
 def test_import_module():
     async def coro():
-        await c.op.import_module("time")
-        await c.op.eval("time.time()")
-        await c.op.import_module("os.path", "osp")
-        await c.op.eval("osp.abspath('./')")
+        await c.async_op.import_module("time")
+        await c.async_op.eval("time.time()")
+        await c.async_op.import_module("os.path", "osp")
+        await c.async_op.eval("osp.abspath('./')")
 
     asyncio.run(coro())

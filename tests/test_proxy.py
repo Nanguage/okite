@@ -43,7 +43,7 @@ def test_remote_obj():
     assert p.mth1(10) == 20
     b = A()
     p = c.remote_object(b, "b")
-    r = asyncio.run(c.op.eval("b.mth1(10)"))
+    r = asyncio.run(c.async_op.eval("b.mth1(10)"))
     assert r == 20
     p.c = "111"
-    assert asyncio.run(c.op.eval("b.c")) == "111"
+    assert asyncio.run(c.async_op.eval("b.c")) == "111"

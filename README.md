@@ -89,16 +89,16 @@ print(car_proxy.pos)  # [100, 100]
 
 | Operation | Asynchronous API | Synchronous API | Description |
 | --------- | --------- | -------- | ----------- |
-| call | `client.op.call` | `client.sync_op.call` | Call registered function in server |
-| register_from_local | `client.op.register_from_local` | `client.sync_op.register_from_local` | Send a function to server side, and register it as a RPC function. |
-| unregister_func | `client.op.unregister_func` | `client.sync_op.unregister_func` | Unregister a RPC function in server side. |
-| assign_from_local | `client.op.assign_from_local` | `client.sync_op.assign_from_local` | Send a object to server, and assign to a global variable |
-| del_var | `client.op.del_var` | `client.sync_op.del_var` | Delete a global veriable in server side environment. |
-| eval | `client.op.eval` | `client.sync_op.eval` | Run `eval` function on server |
-| exec | `client.op.exec` | `client.sync_op.exec` | Run `exec` function on server |
-| set_attr | `client.op.set_attr` | `client.sync_op.set_attr` | Set object's attribute in server side's environment. |
-| get_attr | `client.op.get_attr` | `client.sync_op.get_attr` | Get object's attribute from server side's environment. |
-| import_module | `client.op.import_module` | `client.sync_op.import_module` | Import a module in server side's environment. |
+| call | `client.async_op.call` | `client.op.call` | Call registered function in server |
+| register_from_local | `client.async_op.register_from_local` | `client.op.register_from_local` | Send a function to server side, and register it as a RPC function. |
+| unregister_func | `client.async_op.unregister_func` | `client.op.unregister_func` | Unregister a RPC function in server side. |
+| assign_from_local | `client.async_op.assign_from_local` | `client.op.assign_from_local` | Send a object to server, and assign to a global variable |
+| del_var | `client.async_op.del_var` | `client.op.del_var` | Delete a global veriable in server side environment. |
+| eval | `client.async_op.eval` | `client.op.eval` | Run `eval` function on server |
+| exec | `client.async_op.exec` | `client.op.exec` | Run `exec` function on server |
+| set_attr | `client.async_op.set_attr` | `client.op.set_attr` | Set object's attribute in server side's environment. |
+| get_attr | `client.async_op.get_attr` | `client.op.get_attr` | Get object's attribute from server side's environment. |
+| import_module | `client.async_op.import_module` | `client.op.import_module` | Import a module in server side's environment. |
 
 Example:
 
@@ -110,8 +110,8 @@ client = Client("127.0.0.1:8686")
 def add(a, b):
     return a + b
 
-client.sync_op.register_from_local(add)
-print(client.sync_op.call(add, 1, 2))  # 3
+client.op.register_from_local(add)
+print(client.op.call(add, 1, 2))  # 3
 ```
 
 ## Custom Pickler
@@ -155,7 +155,7 @@ from okite.rpc.stream import Streamer
 
 streamer = Streamer(MyPickler())
 client = Client("127.0.0.1:8686", streamer=streamer)
-print(client.sync_op.eval("1 + 1"))  # 2
+print(client.op.eval("1 + 1"))  # 2
 ```
 
 ## Worker
@@ -168,14 +168,14 @@ from okite import Client
 
 with Worker() as w:
     c = Client(w.server_addr)
-    res = c.sync_op.eval("1 + 1")
+    res = c.op.eval("1 + 1")
     print(res)  # will print '2'
 
 # or:
 w = Worker()
 w.start()
 c = Client(w.server_addr)
-res = c.sync_op.eval("1 + 1")
+res = c.op.eval("1 + 1")
 print(res)  # 2
 w.terminated()
 ```
