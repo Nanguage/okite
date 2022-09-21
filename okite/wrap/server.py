@@ -52,7 +52,7 @@ class Server(_Server):
             """For distinguish an attribute is method or not."""
             obj = self.env[obj_name]
             attr = getattr(obj, attr_name)
-            _l = []
+            _l: T.List = []
             if isinstance(attr, types.MethodType):
                 return True
             elif isinstance(attr, type(_l.append)):
