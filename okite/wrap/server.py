@@ -1,6 +1,7 @@
 import typing as T
 
 from ..rpc.rpc import Server as _Server
+from ..rpc.pickler import Pickler
 from ..rpc.transport import Transport
 
 
@@ -11,8 +12,9 @@ if T.TYPE_CHECKING:
 class Server(_Server):
     def __init__(
             self, address: str = "127.0.0.1:8686",
-            streamer: T.Optional["Streamer"] = None,
+            pickler_cls: type = Pickler,
             transport_cls: type = Transport,
+            streamer: T.Optional["Streamer"] = None,
             ) -> None:
         self.env = globals()
 
@@ -57,4 +59,4 @@ class Server(_Server):
             "get_attr": _get_attr,
             "set_attr": _set_attr,
         }
-        super().__init__(address, streamer, transport_cls, funcs)
+        super().__init__(address, pickler_cls, transport_cls, streamer, funcs)

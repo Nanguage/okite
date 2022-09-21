@@ -2,7 +2,8 @@ import json
 
 from okite.worker import Worker
 from okite.wrap import Client
-from okite.rpc.stream import Streamer, PicklerBase
+from okite.rpc.pickler import PicklerBase
+from okite.rpc.stream import Streamer
 
 
 def test_worker():
@@ -49,6 +50,6 @@ def test_custom_pickler():
     w = Worker(addr, streamer=streamer)
     w.start()
     w.wait_until_server_bind()
-    c = Client(addr, streamer=streamer)
+    c = Client(addr, pickler_cls=MyPickler)
     assert c.op.eval("1 + 1") == 2
     w.terminate()

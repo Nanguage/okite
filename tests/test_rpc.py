@@ -1,11 +1,11 @@
-from cgitb import handler
 import pytest
 import multiprocessing
 import asyncio
 import json
 
 from okite.rpc.rpc import Server, Client, get_handler
-from okite.rpc.stream import Streamer, PicklerBase
+from okite.rpc.stream import Streamer
+from okite.rpc.pickler import PicklerBase
 from okite.utils import patch_multiprocessing_pickler
 from okite.utils import wait_until_bind
 
@@ -47,7 +47,7 @@ def test_call():
     asyncio.run(coro())
 
 
-def test_custom_pickler():
+def test_custom_pickler_1():
     patch_multiprocessing_pickler()
 
     class MyPickler(PicklerBase):
@@ -68,5 +68,29 @@ def test_custom_pickler():
     p.start()
     wait_until_bind(addr)
     c = Client(addr, streamer=streamer)
+    assert asyncio.run(c.call("eval", "1")) == 1
+    p.terminate()
+
+
+def test_custom_pickler_2():
+    patch_multiprocessing_pickler()
+
+    class MyPickler(PicklerBase):
+        def serialize(self, obj) -> bytes:
+            return json.dumps(obj).encode()
+
+        def deserialize(self, obj_bytes: bytes):
+            return json.loads(obj_bytes.decode())
+
+    addr = "127.0.0.1:8678"
+    def _run_server():
+        s = Server(addr, pickler_cls=MyPickler)
+        s.register_func(eval)
+        s.run()
+
+    p = multiprocessing.Process(target=_run_server)
+    p.start()
+    wait_until_bind(addr)
+    c = Client(addr, pickler_cls=MyPickler)
     assert asyncio.run(c.call("eval", "1")) == 1
     p.terminate()

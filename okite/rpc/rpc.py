@@ -3,6 +3,7 @@ import traceback
 import asyncio
 import signal
 
+from .pickler import Pickler
 from .stream import Streamer
 from ..utils import parse_address, get_event_loop
 from .transport import Transport
@@ -45,15 +46,16 @@ def get_handler(calls, streamer: Streamer):
 class Server():
     def __init__(
             self, address: str = "127.0.0.1:8686",
-            streamer: T.Optional[Streamer] = None,
+            pickler_cls: type = Pickler,
             transport_cls: type = Transport,
+            streamer: T.Optional[Streamer] = None,
             funcs: T.Optional[T.Dict[str, T.Callable]] = None) -> None:
         if funcs is None:
             funcs = {}
         self.funcs = funcs
         self.address = parse_address(address)
         if streamer is None:
-            self.streamer = Streamer()
+            self.streamer = Streamer(pickler_cls())
         else:
             self.streamer = streamer
         self.transport_cls = transport_cls
@@ -86,13 +88,14 @@ class Server():
 class Client():
     def __init__(
             self, address: str,
-            streamer: T.Optional[Streamer] = None,
+            pickler_cls: type = Pickler,
             transport_cls: type = Transport,
+            streamer: T.Optional[Streamer] = None,
             ) -> None:
         if streamer is not None:
             self.streamer = streamer
         else:
-            self.streamer = Streamer()
+            self.streamer = Streamer(pickler_cls())
         self.server_addr = parse_address(address)
         self.transport: Transport = transport_cls(self.server_addr, False)
 

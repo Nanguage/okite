@@ -117,7 +117,7 @@ print(client.op.call(add, 1, 2))  # 3
 ```
 
 These operations also has an asynchronous version API, which stored in `client.async_op`.
-It's compatible with the Python [`asyncio`](https://docs.python.org/3/library/asyncio.html) framework:
+It's compatible with the Python [asyncio](https://docs.python.org/3/library/asyncio.html) framework:
 
 ```Python
 from okite import Client
@@ -160,10 +160,8 @@ Use `MyPickler` in server:
 # my_server.py
 from my_pickler import MyPickler
 from okite import Server
-from okite.rpc.stream import Streamer
 
-streamer = Streamer(MyPickler())
-server = Server("127.0.0.1:8686", streamer=streamer)
+server = Server("127.0.0.1:8686", pickler_cls=MyPickler)
 server.run()
 ```
 
@@ -173,10 +171,8 @@ Use `MyPickler` in client:
 # my_client.py
 from my_pickler import MyPickler
 from okite import Client
-from okite.rpc.stream import Streamer
 
-streamer = Streamer(MyPickler())
-client = Client("127.0.0.1:8686", streamer=streamer)
+client = Client("127.0.0.1:8686", pickler_cls=MyPickler)
 print(client.op.eval("1 + 1"))  # 2
 ```
 

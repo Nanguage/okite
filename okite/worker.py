@@ -3,31 +3,39 @@ from multiprocessing import Process
 
 from .wrap import Server
 from .rpc.stream import Streamer
+from .rpc.pickler import Pickler
 from .rpc.transport import Transport
 from .utils import find_free_port, wait_until_bind, parse_address
 from .utils import patch_multiprocessing_pickler
 
 
+patch_multiprocessing_pickler()
+
+
 class Worker(Process):
     def __init__(
             self, address: T.Optional[str] = None,
+            pickler_cls: type = Pickler,
+            transport_cls: type = Transport,
             streamer: T.Optional[Streamer] = None,
-            transport_cls: type = Transport) -> None:
+            ) -> None:
         if address is None:
             port = find_free_port()
             self.server_addr = f"127.0.0.1:{port}"
         else:
             self.server_addr = address
-        if streamer is not None:
-            patch_multiprocessing_pickler()
-        self.streamer = streamer
+        self.pickler_cls = pickler_cls
         self.transport_cls = transport_cls
+        self.streamer = streamer
         super().__init__()
 
     def run(self):
         server = Server(
-            self.server_addr, streamer=self.streamer,
-            transport_cls=self.transport_cls)
+            self.server_addr, 
+            pickler_cls=self.pickler_cls,
+            transport_cls=self.transport_cls,
+            streamer=self.streamer,
+            )
         server.run()
 
     def wait_until_server_bind(self):
