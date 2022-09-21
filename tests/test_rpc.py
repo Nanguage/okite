@@ -1,11 +1,13 @@
+from cgitb import handler
 import pytest
 import multiprocessing
 import asyncio
 import json
 
-from okite.rpc.rpc import Server, Client
+from okite.rpc.rpc import Server, Client, get_handler
 from okite.rpc.stream import Streamer, PicklerBase
-from okite.utils import patch_multiprocessing_pickler
+from okite.rpc.transport import Transport
+from okite.utils import parse_address, patch_multiprocessing_pickler
 from okite.utils import wait_until_bind
 
 
@@ -26,6 +28,11 @@ def start_server():
     wait_until_bind(ADDRESS)
     yield
     p.terminate()
+
+
+def test_create_handler():
+    s = Streamer()
+    get_handler({}, s)
 
 
 def test_create_server():
