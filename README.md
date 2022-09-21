@@ -87,18 +87,20 @@ print(car_proxy.pos)  # [100, 100]
 
 ### Operations API
 
-| Operation | Asynchronous API | Synchronous API | Description |
-| --------- | --------- | -------- | ----------- |
-| call | `client.async_op.call` | `client.op.call` | Call registered function in server |
-| register_from_local | `client.async_op.register_from_local` | `client.op.register_from_local` | Send a function to server side, and register it as a RPC function. |
-| unregister_func | `client.async_op.unregister_func` | `client.op.unregister_func` | Unregister a RPC function in server side. |
-| assign_from_local | `client.async_op.assign_from_local` | `client.op.assign_from_local` | Send a object to server, and assign to a global variable |
-| del_var | `client.async_op.del_var` | `client.op.del_var` | Delete a global veriable in server side environment. |
-| eval | `client.async_op.eval` | `client.op.eval` | Run `eval` function on server |
-| exec | `client.async_op.exec` | `client.op.exec` | Run `exec` function on server |
-| set_attr | `client.async_op.set_attr` | `client.op.set_attr` | Set object's attribute in server side's environment. |
-| get_attr | `client.async_op.get_attr` | `client.op.get_attr` | Get object's attribute from server side's environment. |
-| import_module | `client.async_op.import_module` | `client.op.import_module` | Import a module in server side's environment. |
+Okite server and client provided some common functions.
+
+| Operation | Synchronous API | Description |
+| --------- | -------- | ----------- |
+| call | `client.op.call` | Call registered function in server |
+| register_from_local | `client.op.register_from_local` | Send a function to server side, and register it as a RPC function. |
+| unregister_func | `client.op.unregister_func` | Unregister a RPC function in server side. |
+| assign_from_local | `client.op.assign_from_local` | Send a object to server, and assign to a global variable |
+| del_var | `client.op.del_var` | Delete a global veriable in server side environment. |
+| eval | `client.op.eval` | Run `eval` function on server |
+| exec | `client.op.exec` | Run `exec` function on server |
+| set_attr | `client.op.set_attr` | Set object's attribute in server side's environment. |
+| get_attr | `client.op.get_attr` | Get object's attribute from server side's environment. |
+| import_module | `client.op.import_module` | Import a module in server side's environment. |
 
 Example:
 
@@ -112,6 +114,26 @@ def add(a, b):
 
 client.op.register_from_local(add)
 print(client.op.call(add, 1, 2))  # 3
+```
+
+These operations also has an asynchronous version API, which stored in `client.async_op`.
+It's compatible with the Python [`asyncio`](https://docs.python.org/3/library/asyncio.html) framework:
+
+```Python
+from okite import Client
+import asyncio
+
+client = Client("127.0.0.1:8686")
+
+def add(a, b):
+    return a + b
+
+async def main():
+    await client.async_op.register_from_local(add)
+    res = await client.async_op.call(add, 1, 2)
+    print(res)
+
+asyncio.run(main())  # 3
 ```
 
 ## Custom Pickler
