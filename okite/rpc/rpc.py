@@ -1,9 +1,10 @@
 import typing as T
 import traceback
 import asyncio
+import signal
 
 from .stream import Streamer
-from ..utils import parse_address
+from ..utils import parse_address, get_event_loop
 from .transport import Transport
 
 
@@ -23,11 +24,17 @@ def get_handler(calls, streamer: Streamer):
             try:
                 output = calls[func](*args, **kwargs)
             except Exception:
-                await streamer.dump(True, transport)
+                await streamer.dump(True, transport)  # flag
                 await streamer.dump(traceback.format_exc(), transport)
             else:
-                await streamer.dump(False, transport)
-                await streamer.dump(output, transport)
+                try:
+                    streamer.pre_serialize(output)
+                except Exception:
+                    await streamer.dump(True, transport)  # flag
+                    await streamer.dump(traceback.format_exc(), transport)
+                else:
+                    await streamer.dump(False, transport)  # flag
+                    await streamer.dump(output, transport)
         else:
             print(f"unsupported command: {command}, close the connection.")
         transport.close_connection()
@@ -71,7 +78,9 @@ class Server():
                 await transport.init_connection()
                 loop.create_task(handler(transport))
 
-        asyncio.run(server_coro())
+        with get_event_loop() as loop:
+            signal.signal(signal.SIGINT, lambda s, f: loop.stop())
+            loop.run_until_complete(server_coro())
 
 
 class Client():
