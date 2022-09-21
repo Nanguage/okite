@@ -1,4 +1,5 @@
 import typing as T
+import types
 
 from ..rpc.rpc import Server as _Server
 from ..rpc.pickler import Pickler
@@ -47,6 +48,19 @@ class Server(_Server):
             obj = self.env[obj_name]
             setattr(obj, attr_name, value)
 
+        def _is_method_type(obj_name: str, attr_name: str) -> bool:
+            """For distinguish an attribute is method or not."""
+            obj = self.env[obj_name]
+            attr = getattr(obj, attr_name)
+            _l = []
+            if isinstance(attr, types.MethodType):
+                return True
+            elif isinstance(attr, type(_l.append)):
+                # builtin_function_or_method
+                return True
+            else:
+                return False
+
         funcs: T.Dict[str, T.Callable] = {
             "exec": lambda e: exec(e, self.env),
             "eval": lambda e: eval(e, self.env),
@@ -58,5 +72,6 @@ class Server(_Server):
             "call_method": _call_method,
             "get_attr": _get_attr,
             "set_attr": _set_attr,
+            "is_method_type": _is_method_type,
         }
         super().__init__(address, pickler_cls, transport_cls, streamer, funcs)

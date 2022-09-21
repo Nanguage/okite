@@ -31,7 +31,7 @@ class Worker(Process):
 
     def run(self):
         server = Server(
-            self.server_addr, 
+            self.server_addr,
             pickler_cls=self.pickler_cls,
             transport_cls=self.transport_cls,
             streamer=self.streamer,

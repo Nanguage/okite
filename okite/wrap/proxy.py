@@ -1,5 +1,4 @@
 import typing as T
-import types
 
 from ..utils import get_event_loop
 if T.TYPE_CHECKING:
@@ -53,12 +52,15 @@ class ObjProxy(Proxy):
             coro = self._client.async_op.del_var(self._name)
             loop.run_until_complete(coro)
 
-    def __getattr__(self, name: str) -> T.Any:
+    def __getattr__(self, attr_name: str) -> T.Any:
         async def coro():
-            attr = await self._client.async_op.eval(f"{self._name}.{name}")
-            if isinstance(attr, types.MethodType):
-                return MethodProxy(self._client, self._name, name)
+            _is_method = await self._client.async_op.call(
+                "is_method_type", self._name, attr_name)
+            if _is_method:
+                return MethodProxy(self._client, self._name, attr_name)
             else:
+                attr = await self._client.async_op.eval(
+                    f"{self._name}.{attr_name}")
                 return attr
         with get_event_loop() as loop:
             return loop.run_until_complete(coro())

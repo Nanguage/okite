@@ -10,7 +10,7 @@ from okite.utils import patch_multiprocessing_pickler
 from okite.utils import wait_until_bind
 
 
-ADDRESS = "127.0.0.1:8686"
+ADDRESS = "127.0.0.1:8670"
 c = Client(ADDRESS)
 
 
@@ -58,7 +58,7 @@ def test_custom_pickler_1():
             return json.loads(obj_bytes.decode())
 
     streamer = Streamer(MyPickler())
-    addr = "127.0.0.1:8685"
+    addr = "127.0.0.1:8675"
     def _run_server():
         s = Server(addr, streamer=streamer)
         s.register_func(eval)

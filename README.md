@@ -85,6 +85,19 @@ car_proxy.pos = [100, 100]  # This will set car.pos on server side
 print(car_proxy.pos)  # [100, 100]
 ```
 
+Create proxy by remote variable's name:
+
+```Python
+from okite import Client, ObjProxy
+
+c = Client("127.0.0.1:8686")
+c.op.exec("a = []")  # create a variable in server side
+
+p_a = ObjProxy(c, "a")  # create a proxy refer to 'a'
+p_a.append(1)
+print(c.op.eval("a"))  # [1]
+```
+
 ### Operations API
 
 Okite server and client provided some common functions.

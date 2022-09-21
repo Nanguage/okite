@@ -4,6 +4,7 @@ import asyncio
 from okite.wrap import Client
 
 from _utils import start_server
+from okite.wrap.proxy import ObjProxy
 
 
 ADDRESS = "127.0.0.1:8688"
@@ -47,3 +48,28 @@ def test_remote_obj():
     assert r == 20
     p.c = "111"
     assert asyncio.run(c.async_op.eval("b.c")) == "111"
+
+
+def test_proxy_by_name():
+    c = Client(ADDRESS)
+    c.op.exec("a = []")
+    p_a = ObjProxy(c, "a")
+    p_a.append(1)
+    assert c.op.eval("a") == [1]
+
+
+def test_remote_weakref():
+    c = Client(ADDRESS)
+
+    class A():
+        def mth1(self):
+            return 1
+    
+    a = A()
+    c.op.assign_from_local("a", a)
+    c.op.import_module("weakref")
+    c.op.exec("a.r = weakref.ref(a)")
+    with pytest.raises(RuntimeError):
+        c.op.eval("a")
+    p = ObjProxy(c, "a")
+    assert p.mth1() == 1
