@@ -1,3 +1,5 @@
 ignore:
   - "tests/"
   - "setup.py"
+  - "okite/__main__.py"
+  - "okite/ssh.py"

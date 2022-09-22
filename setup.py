@@ -37,7 +37,7 @@ def get_long_description():
 
 
 def get_install_requires():
-    requirements = ["cloudpickle", "fire"]
+    requirements = ["cloudpickle", "fire", "paramiko"]
     return requirements
 
 
