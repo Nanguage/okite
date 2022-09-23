@@ -78,10 +78,12 @@ class SSHWorker(Worker):
             remote_python_path: T.Optional[str] = None,
             ssh_kwargs: T.Optional[dict] = None,
             ) -> None:
-        super().__init__(address, None, None, None)
+        super().__init__(address, type, type, None)
         host, port = parse_address(address)
         self.port = port
         self.remote_python_path = remote_python_path
+        if ssh_kwargs is None:
+            ssh_kwargs = dict()
         ssh_kwargs.update({'host': host})
         self.ssh_kwargs = ssh_kwargs
 
