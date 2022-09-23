@@ -4,6 +4,9 @@ import socket
 import paramiko
 from paramiko.buffered_pipe import PipeTimeout
 
+from .utils import parse_address
+from .worker import Worker
+
 
 def _get_client(
         host, username, port=22,
@@ -29,7 +32,7 @@ def install_okite(
     """Install a okite on remote machine, via SSH."""
     client = _get_client(host, username, port, password, key_filename)
     if remote_python_path is None:
-        remote_python_path = "python"
+        remote_python_path = "/bin/env python"
     cmd = f"{remote_python_path} -m pip install okite"
     _, stdout, stderr = client.exec_command(cmd)
     out = stdout.read().decode()
@@ -49,9 +52,11 @@ def launch_server(
     """Launch a okite server on remote machine, via SSH."""
     client = _get_client(host, username, ssh_port, password, key_filename)
     if remote_python_path is None:
-        remote_python_path = "python"
-    cmd = f"{remote_python_path} -m okite server --port={server_port}"
+        remote_python_path = "/bin/env python"
+    cmd = f"{remote_python_path} -m okite server " + \
+          f"--ip='0.0.0.0' --port={server_port}"
     _, stdout, stderr = client.exec_command(cmd)
+
     stdout.channel.settimeout(0.1)
     stderr.channel.settimeout(0.1)
     while True:
@@ -65,5 +70,29 @@ def launch_server(
                 break
         except (PipeTimeout, socket.timeout):
             continue
-    stdout.close()
-    stderr.close()
+
+
+class SSHWorker(Worker):
+    def __init__(
+            self, address: str,
+            remote_python_path: T.Optional[str] = None,
+            ssh_kwargs: T.Optional[dict] = None,
+            ) -> None:
+        super().__init__(address, None, None, None)
+        host, port = parse_address(address)
+        self.port = port
+        self.remote_python_path = remote_python_path
+        ssh_kwargs.update({'host': host})
+        self.ssh_kwargs = ssh_kwargs
+
+    def run(self):
+        ssh_kwargs = self.ssh_kwargs
+        launch_server(
+            ssh_kwargs['host'],
+            ssh_kwargs['username'],
+            self.port,
+            ssh_kwargs.get("port", 22),
+            ssh_kwargs.get("password"),
+            ssh_kwargs.get("key_filename"),
+            self.remote_python_path,
+        )
