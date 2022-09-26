@@ -1,0 +1,9 @@
+(qt) PS C:\Users\Nangu\Desktop\okite> python .\benchmark\bench.py
+Start server at ('127.0.0.1', 58014)
+Run hello_world 1000 times
+cost: 0.7979621887207031s, 0.0007979621887207032s per run
+QPS: 1253.1922115297277
+Start server at ('127.0.0.1', 59049)
+Run numpy_add 100 times
+cost: 6.292990207672119s, 0.0629299020767212s per run
+QPS: 15.890696902417657

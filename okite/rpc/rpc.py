@@ -73,7 +73,7 @@ class Server():
         handler = get_handler(self.funcs, self.streamer)
 
         async def server_coro():
-            print(f"Start server at {self.address}")
+            print(f"Start server at {self.address}", flush=True)
             loop = asyncio.get_event_loop()
 
             while True:
